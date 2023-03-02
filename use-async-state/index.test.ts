@@ -45,7 +45,7 @@ describe('useAsyncState', () => {
 
     act(() => {
       const firstAsyncAction = new Promise<string>(resolve => {
-        setTimeout(() => resolve('first state'), 1_000);
+        setTimeout(() => resolve('first state'), 800);
       });
       const secondAsyncAction = new Promise<string>(resolve => {
         setTimeout(() => resolve('second state'), 200);
@@ -58,10 +58,21 @@ describe('useAsyncState', () => {
     });
 
     await Promise.all(pendingTasks);
-
-    await waitForNextUpdate();
+    await Promise.allSettled([
+      waitForNextUpdate(),
+    ]);
 
     expect(result.current[0]).toBe('second state');
+  });
+
+  test('Should dispatcher be memoized', () => {
+    const { result, rerender } = renderHook(() => useAsyncState('initial state'));
+
+    const dispatcher = result.current[1];
+
+    rerender();
+
+    expect(result.current[1]).toBe(dispatcher);
   });
 
 });
